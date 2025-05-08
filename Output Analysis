@@ -1,0 +1,12 @@
+Dataset Preview:
+    CustomerID  Gender  Age  Annual Income (k$)  Spending Score (1-100)
+0           1    Male   19                   15                      39
+1           2    Male   21                   15                      81
+2           3  Female   20                   16                       6
+
+Missing Values:
+ CustomerID             0
+ Gender                 0
+ Age                    0
+ Annual Income (k$)     0
+ Spending Score (1-100) 0
