@@ -1,66 +1,55 @@
-# Customer Segmentation Analysis - OIBSIP Data Analytics Task
-
-# Import Libraries
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
-# Load the dataset
-data = pd.read_csv("Customer_Segmentation.csv")
+# Load dataset
+df = pd.read_csv("customer_segmentation_dataset.csv")
 
-# Display first 5 rows
-print("Dataset Preview:\n", data.head())
+# Display basic info
+print("\nFirst 5 records:")
+print(df.head())
+print("\nData Summary:")
+print(df.describe())
+print("\nData Info:")
+print(df.info())
 
-# Check for missing values
-print("\nMissing Values:\n", data.isnull().sum())
+# Encode Gender to numeric
+df['Gender'] = df['Gender'].map({'Male': 0, 'Female': 1})
 
-# Drop duplicates (if any)
-data.drop_duplicates(inplace=True)
-
-# Descriptive Statistics
-print("\nDescriptive Statistics:\n", data.describe())
-
-# Data Preprocessing
-# Selecting relevant columns for segmentation
-segmentation_data = data[["Annual Income (k$)", "Spending Score (1-100)"]]
-
-# Standardize the data
+# Select features for clustering
+features = df[['Age', 'Annual Income (USD)', 'Spending Score (1-100)', 'Purchase Frequency']]
 scaler = StandardScaler()
-segmentation_data_scaled = scaler.fit_transform(segmentation_data)
+scaled_features = scaler.fit_transform(features)
 
-# Elbow Method to Determine Optimal Clusters
-wcss = []
-for i in range(1, 11):
-    kmeans = KMeans(n_clusters=i, init='k-means++', random_state=42)
-    kmeans.fit(segmentation_data_scaled)
-    wcss.append(kmeans.inertia_)
+# Apply KMeans clustering
+kmeans = KMeans(n_clusters=4, random_state=42)
+df['Segment'] = kmeans.fit_predict(scaled_features)
 
-# Plot Elbow Method
-plt.figure(figsize=(10, 6))
-plt.plot(range(1, 11), wcss, marker='o')
-plt.title("Elbow Method - Optimal K")
-plt.xlabel("Number of Clusters")
-plt.ylabel("WCSS")
-plt.grid(alpha=0.3)
-plt.tight_layout()
-plt.show()
+# Show cluster centers
+print("\nCluster Centers:")
+print(kmeans.cluster_centers_)
 
-# Apply K-Means Clustering
-kmeans = KMeans(n_clusters=4, init='k-means++', random_state=42)
-data['Cluster'] = kmeans.fit_predict(segmentation_data_scaled)
+# Visualization 1: Pairplot by Segment
+sns.pairplot(df, vars=['Age', 'Annual Income (USD)', 'Spending Score (1-100)'], hue='Segment', palette='Set2')
+plt.suptitle("Customer Segments by Features", y=1.02)
+plt.savefig("pairplot_segments.png")
+plt.close()
 
-# Visualize the Clusters
-plt.figure(figsize=(12, 8))
-sns.scatterplot(x=data["Annual Income (k$)"], y=data["Spending Score (1-100)"],
-                hue=data["Cluster"], palette="viridis", s=100, alpha=0.7)
-plt.title("Customer Segmentation Based on Income and Spending Score")
-plt.xlabel("Annual Income (k$)")
-plt.ylabel("Spending Score (1-100)")
-plt.grid(alpha=0.3)
-plt.tight_layout()
-plt.show()
+# Visualization 2: Average Income by Segment
+plt.figure(figsize=(8, 5))
+sns.barplot(x='Segment', y='Annual Income (USD)', data=df, palette='pastel')
+plt.title("Average Income per Customer Segment")
+plt.savefig("income_by_segment.png")
+plt.close()
 
-# Cluster Analysis
-print("\nCluster Analysis:\n", data.groupby("Cluster").mean())
+# Visualization 3: Customer Count per Segment
+plt.figure(figsize=(6, 4))
+sns.countplot(x='Segment', data=df, palette='Set3')
+plt.title("Customer Count per Segment")
+plt.savefig("customer_count_segment.png")
+plt.close()
+
+print("\n✅ All visualizations saved successfully.")
+
